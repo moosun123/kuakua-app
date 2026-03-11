@@ -283,7 +283,17 @@ function generatePushSchedule(profile) {
 }
 
 // ==================== 状态管理 ====================
-let profile = {};
+let profile = {
+  nickname: '',
+  age: '',
+  career: '',
+  workMode: '',
+  workStart: '09:00',
+  workEnd: '18:00',
+  pushTime: '',
+  pushEnabled: true,
+  personality: []
+};
 let pushSchedule = [];
 
 // ==================== 推送管理器 ====================
@@ -333,7 +343,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const savedProfile = await db.get('userProfile');
   
   if (savedProfile && savedProfile.nickname) {
-    profile = savedProfile;
+    // 合并保存的数据和默认值
+    profile = { ...profile, ...savedProfile };
+    // 确保personality是数组
+    if (!profile.personality) profile.personality = [];
     showScreen('mainScreen');
     initMainScreen();
   } else {
