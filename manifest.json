@@ -1,22 +1,16 @@
 {
   "name": "每天夸你一万遍",
   "short_name": "夸夸",
-  "description": "每天收到温暖的夸奖和 encouragement",
+  "description": "每天收到温暖的夸奖",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFE4E1",
-  "theme_color": "#FF69B4",
+  "background_color": "#F5F5F0",
+  "theme_color": "#8B7355",
   "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png.svg",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-192.png.svg",
-      "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
