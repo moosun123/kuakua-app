@@ -1,66 +1,161 @@
-// 每天夸你一万遍 - 极简日式版 v3.0
-// MUJI风格，大量留白，低饱和度配色
+// 每天夸你一万遍 - 极简日式版 v3.1
+// 霞鹜文楷字体，智能推送时间
 
-// ==================== 配置 ====================
-const CONFIG = {
-  colors: {
-    bg: '#F5F5F0',
-    accent: '#8B7355'
+// ==================== 智能推送时间计算 ====================
+function calculatePushTime(career, workMode, workStart, workEnd) {
+  // 职业特殊处理
+  if (career === 'student') {
+    return '07:30'; // 学生：上学前
   }
-};
+  
+  if (career === 'programmer') {
+    // 程序员：夜猫子，晚上10点
+    return '22:00';
+  }
+  
+  if (career === 'medical') {
+    // 医护人员：根据轮班，默认早晚交接时
+    if (workMode === 'shift') {
+      // 如果设置了上班时间，在上班前1小时或下班后
+      if (workStart) {
+        const hour = parseInt(workStart.split(':')[0]);
+        if (hour < 12) {
+          // 早班：上班前1小时
+          return String(hour - 1).padStart(2, '0') + ':00';
+        } else {
+          // 晚班：下午4点鼓励
+          return '16:00';
+        }
+      }
+    }
+    return '08:00';
+  }
+  
+  // 根据工作模式
+  switch (workMode) {
+    case 'nineToFive':
+      // 朝九晚五：早上8:30 或 晚上下班后
+      if (workEnd) {
+        const endHour = parseInt(workEnd.split(':')[0]);
+        // 下班后半小时
+        return String(endHour + 1).padStart(2, '0') + ':30';
+      }
+      return '08:30';
+      
+    case 'flexible':
+      return '09:30'; // 弹性工作：上午9:30
+      
+    case 'shift':
+      if (workStart) {
+        const hour = parseInt(workStart.split(':')[0]);
+        if (hour < 10) {
+          // 早班：上班前
+          return String(hour - 1).padStart(2, '0') + ':30';
+        } else if (hour < 14) {
+          // 中班：上午鼓励
+          return '10:00';
+        } else {
+          // 晚班：下午鼓励
+          return '15:00';
+        }
+      }
+      return '09:00';
+      
+    case 'freelance':
+      return '09:00'; // 自由职业：早上9点
+      
+    case 'unemployed':
+      return '09:30'; // 待业：上午9:30，开启新的一天
+      
+    default:
+      return '09:00';
+  }
+}
 
-// ==================== 夸夸库（日式风格文案）====================
+// 获取职业中文名
+function getCareerName(career) {
+  const names = {
+    programmer: '程序员',
+    designer: '设计师',
+    product: '产品经理',
+    teacher: '教师',
+    medical: '医护',
+    sales: '销售',
+    student: '学生',
+    freelancer: '自由职业',
+    other: '职场人'
+  };
+  return names[career] || '朋友';
+}
+
+// 获取推送时间描述
+function getPushTimeDescription(career, workMode) {
+  if (career === 'programmer') return '晚间';
+  if (career === 'student') return '清晨';
+  if (workMode === 'nineToFive') return '下班后';
+  if (workMode === 'shift') return '根据班次';
+  if (workMode === 'freelance') return '上午';
+  return '上午';
+}
+
+// ==================== 夸夸库（中文日式治愈文案）====================
 const PRAISE_LIBRARY = {
-  // 基础夸夸 - 日式侘寂美学
+  // 基础夸夸 - 侘寂美学
   base: [
-    "今日も一日、お疲れ様でした。",
-    "あなたのペースで、大丈夫。",
-    "少しずつでいい、前に進んでいる。",
-    "今のあなたは、十分素敵です。",
-    "無理しなくていい、自分を大切に。",
-    "小さなことにも、感謝を忘れずに。",
-    "今日という日は、二度と来ない大切な一日。",
-    "深呼吸して、リラックスしてください。",
-    "あなたの努力は、必ず実を結ぶ。",
-    "完璧でなくても、あなたは愛されている。",
-    "一歩ずつ、確実に。",
-    "今日のあなたは、昨日より輝いている。",
-    "疲れたら、休んでいいんだよ。",
-    "あなたの存在自体が、かけがえのない価値。",
-    "ゆっくりでいい、自分を信じて。"
+    "今日也辛苦了。",
+    "按你的节奏来，没关系。",
+    "慢慢来，你在前进就好。",
+    "现在的你，已经足够好了。",
+    "不必勉强，善待自己。",
+    "细微之处，也有值得感恩的事。",
+    "今天是不会重来的珍贵一天。",
+    "深呼吸，放轻松。",
+    "你的努力，终会开花结果。",
+    "不必完美，你也值得被爱。",
+    "一步一步，稳稳地走。",
+    "今天的你，比昨天更闪耀。",
+    "累了就休息，没关系的。",
+    "你的存在本身，就是无可替代的价值。",
+    "慢慢来，相信自己。",
+    "世事无常，安心即是归处。",
+    "平淡的日子里，也有光。",
+    "你已经做得很好了。",
+    "给自己一个拥抱吧。",
+    "今天的阳光，是为你而洒。"
   ],
   
   // 场景化
   morning: [
-    "おはよう。今日も穏やかな一日を。",
-    "朝の静けさを、心に刻んで。",
-    "新しい一日は、新しい可能性。"
+    "早安。愿你今日安稳。",
+    "清晨的宁静，请收入心底。",
+    "新的一天，新的可能。"
   ],
   work: [
-    "集中しているあなたは、美しい。",
-    "一つ一つ、丁寧に。",
-    "無理は禁物、適度に休憩を。"
+    "专注的你，很美丽。",
+    "一件一件，慢慢来。",
+    "记得适时休息。"
   ],
   lunch: [
-    "美味しいものを、ゆっくり味わって。",
-    "昼下がりの小さな幸せを。"
+    "好好吃饭，是今日的修行。",
+    "午后的片刻安宁。"
   ],
   evening: [
-    "一日の終わりに、自分を労って。",
-    "夕暮れ時の、穏やかな光のように。"
+    "一日的终了，请慰劳自己。",
+    "如黄昏般温柔地，对待自己。"
   ],
   night: [
-    "夜は休息の時間、心を整えて。",
-    "良質な睡眠が、明日の活力に。"
+    "夜晚是休息的时间，请安心入睡。",
+    "好梦。",
+    "今天的你已经很努力了。"
   ],
   weekend: [
-    "のんびり過ごす時間も、大切な時間。",
-    "週末は自分を振り返る日に。"
+    "慢慢度过的时光，也是珍贵的时光。",
+    "周末是属于自己的日子。"
   ]
 };
 
 // ==================== IndexedDB ====================
-const DB_NAME = 'PraiseDB_muji';
+const DB_NAME = 'PraiseDB_muji_v2';
 const DB_VERSION = 1;
 
 const db = {
@@ -128,7 +223,7 @@ const db = {
 
 // ==================== 状态管理 ====================
 let currentStep = 1;
-const totalSteps = 5;
+const totalSteps = 4;
 let profile = {
   nickname: '',
   age: '',
@@ -136,7 +231,8 @@ let profile = {
   workMode: '',
   workStart: '09:00',
   workEnd: '18:00',
-  pushTime: '09:00'
+  pushTime: '',
+  pushEnabled: true
 };
 
 // ==================== 初始化 ====================
@@ -167,7 +263,6 @@ function showStep(stepNum) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   document.getElementById(`step${stepNum}`).classList.add('active');
   
-  // 更新dots
   document.querySelectorAll('.dot').forEach((dot, idx) => {
     dot.classList.toggle('active', idx === stepNum - 1);
   });
@@ -224,7 +319,7 @@ function initOnboarding() {
     showStep(4);
   });
   
-  // 步骤4：工作模式
+  // 步骤4：工作模式（最后一步）
   document.querySelectorAll('#workModeOptions .option-item').forEach(item => {
     item.addEventListener('click', () => {
       document.querySelectorAll('#workModeOptions .option-item').forEach(i => i.classList.remove('selected'));
@@ -232,17 +327,20 @@ function initOnboarding() {
       profile.workMode = item.dataset.value;
       
       // 显示/隐藏时间选择
-      const timeSelector = document.getElementById('workTimeSelector');
+      const timeSection = document.getElementById('workTimeSection');
       if (profile.workMode === 'nineToFive' || profile.workMode === 'shift') {
-        timeSelector.style.display = 'block';
+        timeSection.style.display = 'block';
       } else {
-        timeSelector.style.display = 'none';
+        timeSection.style.display = 'none';
       }
+      
+      // 更新智能推送提示
+      updateSmartHint();
     });
   });
   
   document.getElementById('prevStep4').addEventListener('click', () => showStep(3));
-  document.getElementById('nextStep4').addEventListener('click', () => {
+  document.getElementById('finishOnboarding').addEventListener('click', async () => {
     if (!profile.workMode) {
       alert('请选择工作模式');
       return;
@@ -253,20 +351,9 @@ function initOnboarding() {
       profile.workEnd = document.getElementById('workEnd').value;
     }
     
-    showStep(5);
-  });
-  
-  // 步骤5：推送时间
-  document.querySelectorAll('#pushTimeOptions .option-item').forEach(item => {
-    item.addEventListener('click', () => {
-      document.querySelectorAll('#pushTimeOptions .option-item').forEach(i => i.classList.remove('selected'));
-      item.classList.add('selected');
-      profile.pushTime = item.dataset.value;
-    });
-  });
-  
-  document.getElementById('prevStep5').addEventListener('click', () => showStep(4));
-  document.getElementById('finishOnboarding').addEventListener('click', async () => {
+    // 计算智能推送时间
+    profile.pushTime = calculatePushTime(profile.career, profile.workMode, profile.workStart, profile.workEnd);
+    
     await db.save('userProfile', profile);
     
     // 请求通知权限
@@ -277,6 +364,17 @@ function initOnboarding() {
     showScreen('mainScreen');
     initMainScreen();
   });
+}
+
+function updateSmartHint() {
+  const hint = document.getElementById('smartPushHint');
+  if (!profile.career || !profile.workMode) {
+    hint.textContent = '根据你的职业和时间，我们会在最合适的时刻送上夸夸。';
+    return;
+  }
+  
+  const desc = getPushTimeDescription(profile.career, profile.workMode);
+  hint.innerHTML = `根据你的职业和工作模式，推送时间已智能设置为：<strong>${desc}</strong>。`;
 }
 
 // ==================== 主界面逻辑 ====================
@@ -317,23 +415,20 @@ async function generateNewPraise() {
   else if (hour >= 18 && hour < 22) scene = 'evening';
   else scene = 'night';
   
-  // 周末
   const day = new Date().getDay();
   if (day === 0 || day === 6) {
     scene = 'weekend';
   }
   
-  // 合并文案池
   const pool = [...PRAISE_LIBRARY.base, ...(PRAISE_LIBRARY[scene] || [])];
   const praise = pool[Math.floor(Math.random() * pool.length)];
   
-  // 保存
   const today = new Date().toISOString().split('T')[0];
   await db.savePraise(today, praise);
   
   displayPraise(praise);
   
-  btn.textContent = '再接收一次';
+  btn.textContent = '再读一句';
   btn.disabled = false;
 }
 
@@ -341,7 +436,6 @@ function displayPraise(text) {
   const container = document.getElementById('praiseText');
   container.textContent = text;
   
-  // 日期
   const dateStr = new Date().toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
@@ -357,13 +451,11 @@ function initSettings() {
     showScreen('mainScreen');
   });
   
-  // 切换开关
   const toggle = document.getElementById('pushToggle');
   toggle.addEventListener('click', () => {
     toggle.classList.toggle('active');
   });
   
-  // 重置资料
   document.getElementById('resetProfile').addEventListener('click', async () => {
     if (confirm('确定要重新设置吗？')) {
       await db.save('userProfile', null);
@@ -371,25 +463,23 @@ function initSettings() {
     }
   });
   
-  // 保存设置
   document.getElementById('saveSettings').addEventListener('click', async () => {
-    profile.pushTime = document.getElementById('settingPushTime').value;
     profile.pushEnabled = document.getElementById('pushToggle').classList.contains('active');
-    
     await db.save('userProfile', profile);
-    
     alert('已保存');
     showScreen('mainScreen');
   });
 }
 
 async function loadSettings() {
-  const pushToggle = document.getElementById('pushToggle');
+  const toggle = document.getElementById('pushToggle');
   if (profile.pushEnabled !== false) {
-    pushToggle.classList.add('active');
+    toggle.classList.add('active');
   } else {
-    pushToggle.classList.remove('active');
+    toggle.classList.remove('active');
   }
   
-  document.getElementById('settingPushTime').value = profile.pushTime || '09:00';
+  // 显示智能推送时间描述
+  const desc = getPushTimeDescription(profile.career, profile.workMode);
+  document.getElementById('pushTimeDisplay').textContent = desc;
 }
