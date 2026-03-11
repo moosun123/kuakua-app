@@ -1,9 +1,10 @@
-const CACHE_NAME = 'praise-app-v1';
+const CACHE_NAME = 'praise-app-v2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/app.js',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-192.png.svg'
 ];
 
 // 安装时缓存资源
@@ -48,10 +49,11 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// 定时推送（简化版：使用showNotification直接触发，实际应用需要更复杂的调度）
+// 定时推送逻辑
 function scheduleNotification(time) {
-  console.log('Scheduled for:', time);
-  // 这里设置定时推送逻辑
+  console.log('Scheduled push for:', time);
+  // 实际推送逻辑需要结合服务器或本地定时器
+  // 这里仅作演示
 }
 
 // 点击通知

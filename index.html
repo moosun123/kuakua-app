@@ -2,279 +2,883 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#FF69B4">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>每天夸你一万遍</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png.svg">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --primary: #667eea;
+      --primary-dark: #764ba2;
+      --accent: #f093fb;
+      --glass: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, var(--accent) 100%);
       min-height: 100vh;
       color: white;
       overflow-x: hidden;
+      line-height: 1.6;
     }
-    .container {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    header {
-      text-align: center;
-      padding: 30px 0;
-    }
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 8px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-    .subtitle {
-      opacity: 0.9;
-      font-size: 0.95rem;
-    }
-    .card {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      padding: 30px;
-      margin: 20px 0;
-      border: 1px solid rgba(255,255,255,0.2);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .card::before {
-      content: '"';
-      position: absolute;
-      top: 10px;
-      left: 20px;
-      font-size: 80px;
-      opacity: 0.1;
-      font-family: Georgia, serif;
-    }
-    .praise-text {
-      font-size: 1.3rem;
-      line-height: 1.8;
-      text-align: center;
-      min-height: 120px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .praise-date {
-      text-align: center;
-      opacity: 0.7;
-      font-size: 0.85rem;
-      margin-top: 20px;
-    }
-    .btn {
-      background: white;
-      color: #764ba2;
-      border: none;
-      padding: 16px 32px;
-      border-radius: 30px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      width: 100%;
-      margin: 8px 0;
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    }
-    .btn:active {
-      transform: scale(0.98);
-    }
-    .btn-outline {
-      background: transparent;
-      color: white;
-      border: 2px solid white;
-    }
-    .btn-outline:hover {
-      background: rgba(255,255,255,0.1);
-    }
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .settings-panel {
-      background: rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 20px;
-      margin: 15px 0;
-      display: none;
-    }
-    .settings-panel.active {
-      display: block;
-      animation: slideDown 0.3s ease;
-    }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .setting-item {
-      margin: 15px 0;
-    }
-    .setting-label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-    .setting-input {
-      width: 100%;
-      padding: 12px 16px;
-      border: none;
-      border-radius: 12px;
-      font-size: 1rem;
-      background: rgba(255,255,255,0.2);
-      color: white;
-    }
-    .setting-input option {
-      color: #333;
-    }
-    .tag-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .tag {
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.3);
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .tag.active {
-      background: white;
-      color: #764ba2;
-    }
-    .install-hint {
-      background: rgba(255,255,255,0.2);
-      border-radius: 16px;
-      padding: 16px;
-      margin: 15px 0;
-      text-align: center;
-      font-size: 0.9rem;
-      display: none;
-    }
-    .install-hint.active {
-      display: block;
-    }
-    .status-bar {
-      text-align: center;
-      padding: 10px;
-      font-size: 0.85rem;
-      opacity: 0.8;
-      min-height: 40px;
-    }
-    .hearts {
+    
+    /* 动画背景 */
+    .bg-animation {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
+      z-index: 0;
       overflow: hidden;
-      z-index: -1;
     }
-    .heart {
+    
+    .bg-animation::before {
+      content: '';
       position: absolute;
-      font-size: 20px;
-      animation: float 10s infinite ease-in-out;
-      opacity: 0.3;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+      animation: rotate 30s linear infinite;
     }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .floating-shapes {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    .shape {
+      position: absolute;
+      opacity: 0.1;
+      animation: float 20s infinite ease-in-out;
+    }
+    
+    .shape:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; font-size: 40px; }
+    .shape:nth-child(2) { top: 20%; right: 15%; animation-delay: 5s; font-size: 30px; }
+    .shape:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 10s; font-size: 50px; }
+    .shape:nth-child(4) { bottom: 20%; right: 10%; animation-delay: 15s; font-size: 35px; }
+    
     @keyframes float {
-      0%, 100% { transform: translateY(100vh) rotate(0deg); }
-      100% { transform: translateY(-100px) rotate(360deg); }
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-30px) rotate(10deg); }
     }
+    
+    /* 屏幕容器 */
+    .screen {
+      display: none;
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* ==================== 引导页样式 ==================== */
+    .onboarding-container {
+      max-width: 420px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .progress-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: white;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 20%;
+    }
+    
+    .step-indicator {
+      text-align: center;
+      font-size: 0.85rem;
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+    
+    .step {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      animation: fadeIn 0.4s ease;
+    }
+    
+    .step.active {
+      display: flex;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .step-title {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .step-subtitle {
+      text-align: center;
+      opacity: 0.9;
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+    }
+    
+    .input-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    .input-field {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid var(--glass-border);
+      border-radius: 16px;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .input-field::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+    
+    .input-field:focus {
+      outline: none;
+      border-color: white;
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .option-card {
+      padding: 16px 12px;
+      border: 2px solid var(--glass-border);
+      border-radius: 16px;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.9rem;
+    }
+    
+    .option-card:hover {
+      background: rgba(255,255,255,0.25);
+      transform: translateY(-2px);
+    }
+    
+    .option-card.selected {
+      border-color: white;
+      background: rgba(255,255,255,0.3);
+      box-shadow: 0 4px 20px rgba(255,255,255,0.2);
+    }
+    
+    .option-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .tag {
+      padding: 10px 18px;
+      border: 2px solid var(--glass-border);
+      border-radius: 24px;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      user-select: none;
+    }
+    
+    .tag:hover {
+      background: rgba(255,255,255,0.25);
+    }
+    
+    .tag.selected {
+      border-color: white;
+      background: white;
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+    
+    .time-selector {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .time-selector.active {
+      display: grid;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 20px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: white;
+      color: var(--primary-dark);
+      box-shadow: var(--shadow);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    /* ==================== 主界面样式 ==================== */
+    .main-container {
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 0;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      border: 2px solid var(--glass-border);
+    }
+    
+    .user-meta {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+    
+    .user-meta strong {
+      display: block;
+      font-size: 1.1rem;
+      opacity: 1;
+    }
+    
+    .settings-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      color: white;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .settings-btn:hover {
+      background: rgba(255,255,255,0.25);
+      transform: rotate(30deg);
+    }
+    
+    .praise-card {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      padding: 40px 30px;
+      margin: 20px 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    
+    .praise-card::before {
+      content: '"';
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      font-size: 100px;
+      opacity: 0.08;
+      font-family: Georgia, serif;
+      line-height: 1;
+    }
+    
+    .praise-text {
+      font-size: 1.4rem;
+      line-height: 1.9;
+      text-align: center;
+      font-weight: 500;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .praise-date {
+      text-align: center;
+      opacity: 0.7;
+      font-size: 0.85rem;
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    
+    .btn-large {
+      padding: 18px 32px;
+      font-size: 1.1rem;
+    }
+    
     .loading {
       display: inline-block;
       width: 20px;
       height: 20px;
       border: 3px solid rgba(255,255,255,0.3);
       border-radius: 50%;
-      border-top-color: white;
-      animation: spin 1s ease-in-out infinite;
+      border-top-color: currentColor;
+      animation: spin 1s linear infinite;
     }
+    
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+    
+    /* ==================== 设置页样式 ==================== */
+    .settings-container {
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .settings-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    
+    .back-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      color: white;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .settings-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    
+    .settings-section {
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    
+    .settings-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      opacity: 0.9;
+    }
+    
+    .toggle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .toggle-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .toggle-label {
+      font-size: 0.95rem;
+    }
+    
+    .toggle-switch {
+      width: 52px;
+      height: 30px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 15px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .toggle-switch.active {
+      background: white;
+    }
+    
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: all 0.3s;
+    }
+    
+    .toggle-switch.active::after {
+      left: 24px;
+      background: var(--primary-dark);
+    }
+    
+    .save-status {
+      text-align: center;
+      padding: 10px;
+      font-size: 0.9rem;
+      min-height: 40px;
+    }
+    
+    .danger-zone {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .btn-danger {
+      background: rgba(255,100,100,0.2);
+      color: #ff6464;
+      border: 2px solid rgba(255,100,100,0.3);
+      width: 100%;
+    }
+    
+    .btn-danger:hover {
+      background: rgba(255,100,100,0.3);
+    }
+    
+    /* 隐藏checkbox */
+    input[type="checkbox"] {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div class="hearts" id="hearts"></div>
-  
-  <div class="container">
-    <header>
-      <h1>💫 每天夸你一万遍</h1>
-      <p class="subtitle">让温暖不期而遇</p>
-    </header>
-    
-    <div class="card">
-      <div class="praise-text" id="praiseText">
-        <span style="opacity: 0.7">点击下方按钮，接收今日份温暖...</span>
+  <!-- 背景动画 -->
+  <div class="bg-animation"></div>
+  <div class="floating-shapes">
+    <span class="shape">✨</span>
+    <span class="shape">💫</span>
+    <span class="shape">⭐</span>
+    <span class="shape">🌟</span>
+  </div>
+
+  <!-- ==================== 引导页 ==================== -->
+  <div class="screen" id="onboardingScreen">
+    <div class="onboarding-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressBar"></div>
       </div>
-      <div class="praise-date" id="praiseDate"></div>
-    </div>
-    
-    <div class="status-bar" id="statusBar"></div>
-    
-    <button class="btn" id="generateBtn">
-      ✨ 立即夸夸
-    </button>
-    
-    <button class="btn btn-outline" id="settingsBtn">
-      ⚙️ 推送设置
-    </button>
-    
-    <div class="settings-panel" id="settingsPanel">
-      <div class="setting-item">
-        <label class="setting-label">怎么称呼你</label>
-        <input type="text" class="setting-input" id="nickname" placeholder="输入你的名字或昵称">
-      </div>
+      <div class="step-indicator" id="stepIndicator">1/5</div>
       
-      <div class="setting-item">
-        <label class="setting-label">喜欢的风格（可多选）</label>
-        <div class="tag-container">
-          <span class="tag active" data-style="gentle">温柔治愈</span>
-          <span class="tag" data-style="energetic">热血鼓励</span>
-          <span class="tag" data-style="humor">幽默调侃</span>
-          <span class="tag" data-style="poetic">文艺清新</span>
+      <!-- 步骤1：基本信息 -->
+      <div class="step active" id="step1">
+        <h2 class="step-title">👋 嗨，认识一下</h2>
+        <p class="step-subtitle">让我了解你，才能给你最贴心的夸夸</p>
+        
+        <div class="input-group">
+          <label class="input-label">怎么称呼你？</label>
+          <input type="text" class="input-field" id="inputNickname" placeholder="输入你的名字或昵称">
+        </div>
+        
+        <div class="input-group">
+          <label class="input-label">年龄段</label>
+          <div class="options-grid">
+            <label class="option-card">
+              <input type="radio" name="age" value="18-25" checked>
+              <span class="option-icon">🎓</span>
+              <span>18-25岁</span>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="age" value="26-30">
+              <span class="option-icon">💼</span>
+              <span>26-30岁</span>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="age" value="31-35">
+              <span class="option-icon">🚀</span>
+              <span>31-35岁</span>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="age" value="36-40">
+              <span class="option-icon">👔</span>
+              <span>36-40岁</span>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="age" value="40+">
+              <span class="option-icon">🎩</span>
+              <span>40岁以上</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-primary" id="nextStep1">下一步 →</button>
         </div>
       </div>
       
-      <div class="setting-item">
-        <label class="setting-label">推送时间</label>
-        <select class="setting-input" id="pushTime">
-          <option value="08:00">早上 8:00</option>
-          <option value="09:00" selected>早上 9:00</option>
-          <option value="12:00">中午 12:00</option>
-          <option value="18:00">晚上 18:00</option>
-          <option value="21:00">晚上 21:00</option>
-          <option value="22:00">晚上 22:00</option>
-        </select>
+      <!-- 步骤2：职业 -->
+      <div class="step" id="step2">
+        <h2 class="step-title">💼 你的职业是？</h2>
+        <p class="step-subtitle">不同职业有不同的专属夸夸</p>
+        
+        <div class="options-grid" id="careerOptions">
+          <div class="option-card" data-career="programmer">
+            <span class="option-icon">💻</span>
+            <span>程序员</span>
+          </div>
+          <div class="option-card" data-career="designer">
+            <span class="option-icon">🎨</span>
+            <span>设计师</span>
+          </div>
+          <div class="option-card" data-career="product">
+            <span class="option-icon">📊</span>
+            <span>产品经理</span>
+          </div>
+          <div class="option-card" data-career="teacher">
+            <span class="option-icon">📚</span>
+            <span>教师</span>
+          </div>
+          <div class="option-card" data-career="medical">
+            <span class="option-icon">⚕️</span>
+            <span>医护</span>
+          </div>
+          <div class="option-card" data-career="sales">
+            <span class="option-icon">💰</span>
+            <span>销售</span>
+          </div>
+          <div class="option-card" data-career="student">
+            <span class="option-icon">📖</span>
+            <span>学生</span>
+          </div>
+          <div class="option-card" data-career="freelancer">
+            <span class="option-icon">🎯</span>
+            <span>自由职业</span>
+          </div>
+          <div class="option-card" data-career="other" style="grid-column: span 2;">
+            <span class="option-icon">🔧</span>
+            <span>其他</span>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="prevStep2">← 返回</button>
+          <button class="btn btn-primary" id="nextStep2">下一步 →</button>
+        </div>
       </div>
       
-      <button class="btn" id="saveSettingsBtn">💾 保存并开启推送</button>
+      <!-- 步骤3：工作模式 -->
+      <div class="step" id="step3">
+        <h2 class="step-title">⏰ 工作节奏</h2>
+        <p class="step-subtitle">我会根据你的作息智能推送夸夸</p>
+        
+        <div class="options-grid" id="workModeOptions">
+          <div class="option-card" data-workmode="nineToFive">
+            <span class="option-icon">🕘</span>
+            <span>朝九晚五</span>
+          </div>
+          <div class="option-card" data-workmode="flexible">
+            <span class="option-icon">🌅</span>
+            <span>弹性工作</span>
+          </div>
+          <div class="option-card" data-workmode="shift">
+            <span class="option-icon">🌙</span>
+            <span>轮班制</span>
+          </div>
+          <div class="option-card" data-workmode="freelance">
+            <span class="option-icon">🏠</span>
+            <span>自由职业</span>
+          </div>
+          <div class="option-card" data-workmode="unemployed" style="grid-column: span 2;">
+            <span class="option-icon">🔍</span>
+            <span>待业/求职中</span>
+          </div>
+        </div>
+        
+        <div class="time-selector" id="workTimeSelector">
+          <div class="input-group">
+            <label class="input-label">上班时间</label>
+            <input type="time" class="input-field" id="workStart" value="09:00">
+          </div>
+          <div class="input-group">
+            <label class="input-label">下班时间</label>
+            <input type="time" class="input-field" id="workEnd" value="18:00">
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="prevStep3">← 返回</button>
+          <button class="btn btn-primary" id="nextStep3">下一步 →</button>
+        </div>
+      </div>
+      
+      <!-- 步骤4：性格 -->
+      <div class="step" id="step4">
+        <h2 class="step-title">🎭 你的性格标签</h2>
+        <p class="step-subtitle">多选几个，我会调整夸夸的语气</p>
+        
+        <div class="tags-container" id="personalityOptions">
+          <span class="tag" data-personality="完美主义">完美主义</span>
+          <span class="tag" data-personality="拖延症">拖延症</span>
+          <span class="tag" data-personality="社恐">社恐</span>
+          <span class="tag" data-personality="社牛">社牛</span>
+          <span class="tag" data-personality="高敏感">高敏感</span>
+          <span class="tag" data-personality="乐观派">乐观派</span>
+          <span class="tag" data-personality="容易焦虑">容易焦虑</span>
+          <span class="tag" data-personality="佛系">佛系</span>
+          <span class="tag" data-personality="卷王">卷王</span>
+          <span class="tag" data-personality="摆烂">摆烂</span>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="prevStep4">← 返回</button>
+          <button class="btn btn-primary" id="nextStep4">下一步 →</button>
+        </div>
+      </div>
+      
+      <!-- 步骤5：推送设置 -->
+      <div class="step" id="step5">
+        <h2 class="step-title">🔔 搞定！</h2>
+        <p class="step-subtitle">设置推送时间，准备接收夸夸吧</p>
+        
+        <div class="input-group">
+          <label class="input-label">每天几点夸你？</label>
+          <select class="input-field" id="onboardingPushTime">
+            <option value="08:00">早上 8:00（早起鼓励）</option>
+            <option value="09:00" selected>早上 9:00（开工加油）</option>
+            <option value="12:00">中午 12:00（午休提醒）</option>
+            <option value="18:00">晚上 18:00（下班治愈）</option>
+            <option value="21:00">晚上 21:00（睡前放松）</option>
+            <option value="22:00">晚上 22:00（熬夜陪伴）</option>
+          </select>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin: 20px 0;">
+          <p style="font-size: 0.9rem; opacity: 0.9;">
+            💡 提示：你需要允许通知权限才能收到推送。如果错过授权，可以在设置里重新开启。
+          </p>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="prevStep5">← 返回</button>
+          <button class="btn btn-primary" id="finishOnboarding">开始使用 🎉</button>
+        </div>
+      </div>
     </div>
-    
-    <div class="install-hint" id="installHint">
-      <strong>📱 添加到主屏幕使用更佳</strong><br>
-      <small id="installText">点击浏览器菜单 → 添加到主屏幕</small>
+  </div>
+
+  <!-- ==================== 主界面 ==================== -->
+  <div class="screen" id="mainScreen">
+    <div class="main-container">
+      <header class="header">
+        <div class="user-info">
+          <div class="avatar">👋</div>
+          <div class="user-meta">
+            <strong id="displayNickname">你好</strong>
+            <span id="displayCareer">准备好被夸了吗</span>
+          </div>
+        </div>
+        <button class="settings-btn" id="settingsBtn">⚙️</button>
+      </header>
+      
+      <div class="praise-card">
+        <div class="praise-text" id="praiseText">
+          <span style="opacity: 0.7">点击下方按钮，接收今日份温暖...</span>
+        </div>
+        <div class="praise-date" id="praiseDate">
+          <span>📅</span>
+          <span>今天也是美好的一天</span>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn btn-primary btn-large" id="generateBtn">
+          <span>✨</span>
+          <span>立即夸夸</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 设置页 ==================== -->
+  <div class="screen" id="settingsScreen">
+    <div class="settings-container">
+      <header class="settings-header">
+        <button class="back-btn" id="closeSettings">←</button>
+        <h2 class="settings-title">设置</h2>
+      </header>
+      
+      <div class="settings-section">
+        <h3 class="settings-section-title">🔔 推送设置</h3>
+        <div class="toggle-item">
+          <span class="toggle-label">开启每日推送</span>
+          <div class="toggle-switch active" id="enablePushToggle">
+            <input type="checkbox" id="enablePush" checked>
+          </div>
+        </div>
+        <div class="input-group" style="margin-top: 16px;">
+          <label class="input-label">推送时间</label>
+          <select class="input-field" id="settingPushTime">
+            <option value="08:00">早上 8:00</option>
+            <option value="09:00">早上 9:00</option>
+            <option value="12:00">中午 12:00</option>
+            <option value="18:00">晚上 18:00</option>
+            <option value="21:00">晚上 21:00</option>
+            <option value="22:00">晚上 22:00</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h3 class="settings-section-title">📊 数据</h3>
+        <button class="btn btn-secondary" id="resetOnboarding" style="width: 100%;">
+          🔄 重新设置个人资料
+        </button>
+      </div>
+      
+      <div class="save-status" id="saveStatus"></div>
+      
+      <button class="btn btn-primary" id="saveSettings" style="margin-top: 20px;">
+        💾 保存设置
+      </button>
     </div>
   </div>
 
