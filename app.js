@@ -475,34 +475,28 @@ function getContentTypeName(type) {
 async function initMainScreen() {
   document.getElementById('displayNickname').textContent = profile.nickname || '朋友';
   
-  // 重新计算今日推送计划
-  const schedule = generatePushSchedule(profile);
-  
-  // 显示今日推送预览
-  const todayPushes = document.getElementById('todayPushes');
-  if (todayPushes) {
-    let html = '';
-    schedule.forEach((s, i) => {
-      const now = new Date();
-      const [h, m] = s.time.split(':').map(Number);
-      const pushTime = new Date();
-      pushTime.setHours(h, m, 0, 0);
-      const passed = now > pushTime;
-      
-      html += `<div style="padding: 8px 0; ${passed ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
-        ${passed ? '✓' : '○'} ${s.time} ${getContentTypeName(s.content)}
-      </div>`;
-    });
-    todayPushes.innerHTML = html;
+  // 初始化推送
+  await PushManager.init();
+  if (profile.pushEnabled !== false && profile.pushTime) {
+    await PushManager.start(profile.pushTime);
   }
   
-  // 获取一条随机夸夸
-  const praise = getRandomPraise();
-  document.getElementById('praiseText').textContent = praise;
+  // 检查今天是否已有夸夸
+  const today = new Date().toISOString().split('T')[0];
+  const saved = await db.getPraise(today);
   
-  document.getElementById('generateBtn').addEventListener('click', () => {
-    document.getElementById('praiseText').textContent = getRandomPraise();
-  });
+  if (saved) {
+    displayPraise(saved.content);
+  } else {
+    // 显示默认文案
+    document.getElementById('praiseText').textContent = '点击下方按钮，接收今日份温暖。';
+  }
+  
+  // 绑定按钮事件
+  const generateBtn = document.getElementById('generateBtn');
+  if (generateBtn) {
+    generateBtn.addEventListener('click', generateNewPraise);
+  }
   
   document.getElementById('settingsBtn').addEventListener('click', () => {
     showScreen('settingsScreen');
@@ -510,9 +504,63 @@ async function initMainScreen() {
   });
 }
 
-function getRandomPraise() {
-  const allPraises = Object.values(CONTENT_LIBRARY).flat();
-  return allPraises[Math.floor(Math.random() * allPraises.length)];
+async function generateNewPraise() {
+  const btn = document.getElementById('generateBtn');
+  if (btn) {
+    btn.textContent = '...';
+    btn.disabled = true;
+  }
+  
+  // 根据时间选择场景
+  const hour = new Date().getHours();
+  let scene = 'base';
+  
+  if (hour >= 5 && hour < 9) scene = 'morning';
+  else if (hour >= 9 && hour < 12) scene = 'work';
+  else if (hour >= 12 && hour < 14) scene = 'lunch';
+  else if (hour >= 14 && hour < 18) scene = 'work';
+  else if (hour >= 18 && hour < 22) scene = 'evening';
+  else scene = 'night';
+  
+  // 周末
+  const day = new Date().getDay();
+  if (day === 0 || day === 6) {
+    scene = 'weekend';
+  }
+  
+  // 合并文案池
+  const pool = [...CONTENT_LIBRARY.base, ...(CONTENT_LIBRARY[scene] || [])];
+  const praise = pool[Math.floor(Math.random() * pool.length)];
+  
+  // 保存
+  const today = new Date().toISOString().split('T')[0];
+  await db.savePraise(today, praise);
+  
+  displayPraise(praise);
+  
+  if (btn) {
+    btn.textContent = '再读一句';
+    btn.disabled = false;
+  }
+}
+
+function displayPraise(text) {
+  const container = document.getElementById('praiseText');
+  if (container) {
+    container.textContent = text;
+  }
+  
+  // 日期
+  const dateStr = new Date().toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long'
+  });
+  const dateEl = document.getElementById('praiseDate');
+  if (dateEl) {
+    dateEl.textContent = dateStr;
+  }
 }
 
 // ==================== 设置页逻辑 ====================
