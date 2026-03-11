@@ -444,7 +444,65 @@
       display: flex;
     }
     
-    /* 智能推送提示 */
+    /* 标签容器 */
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    
+    .tag {
+      padding: 10px 20px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: transparent;
+      color: var(--text-light);
+    }
+    
+    .tag:hover {
+      border-color: var(--accent-light);
+    }
+    
+    .tag.selected {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+    }
+    
+    /* 今日推送列表 */
+    .today-pushes {
+      margin: 24px 0;
+      padding: 20px;
+      background: rgba(139, 115, 85, 0.03);
+      border-radius: 8px;
+    }
+    
+    .today-pushes-title {
+      font-size: 0.75rem;
+      color: var(--text-lighter);
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+    
+    .push-item {
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: var(--text-light);
+      border-bottom: 1px solid var(--border-light);
+    }
+    
+    .push-item:last-child {
+      border-bottom: none;
+    }
+    
+    .push-item.completed {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
     .smart-push-hint {
       background: rgba(139, 115, 85, 0.03);
       border-left: 2px solid var(--accent-light);
@@ -540,7 +598,7 @@
       </div>
     </div>
     
-    <!-- 步骤4：工作模式（最后一步，包含时间设置） -->
+    <!-- 步骤4：工作模式 + 性格标签 -->
     <div class="step" id="step4">
       <div class="step-dots">
         <span class="dot"></span>
@@ -575,8 +633,18 @@
         </div>
       </div>
       
-      <div class="smart-push-hint" id="smartPushHint">
-        根据你的职业和时间，我们会在最合适的时刻送上夸夸。
+      <p class="question" style="font-size: 1.1rem; margin-top: 32px; margin-bottom: 24px;">你的性格标签（可多选）</p>
+      
+      <div class="tags-container" id="personalityOptions">
+        <span class="tag" data-value="容易焦虑">容易焦虑</span>
+        <span class="tag" data-value="完美主义">完美主义</span>
+        <span class="tag" data-value="拖延症">拖延症</span>
+        <span class="tag" data-value="高敏感">高敏感</span>
+        <span class="tag" data-value="卷王">卷王</span>
+        <span class="tag" data-value="佛系">佛系</span>
+      </div>
+      
+      <div class="smart-push-hint" id="pushPreview" style="display: none;">
       </div>
       
       <div class="btn-group">
@@ -595,6 +663,10 @@
       </div>
       <div class="settings-icon" id="settingsBtn">设置</div>
     </header>
+    
+    <div class="today-pushes" id="todayPushes">
+      <div class="today-pushes-title">今日推送计划</div>
+    </div>
     
     <div class="praise-container">
       <div class="praise-text" id="praiseText">
@@ -624,13 +696,18 @@
         <div class="toggle active" id="pushToggle"></div>
       </div>
       
-      <div class="setting-item" id="testPushItem" style="cursor: pointer;">
-        <span class="setting-label">推送时间（点击测试）</span>
-        <span class="setting-value" id="pushTimeDisplay">09:00</span>
+      <div class="setting-item">
+        <span class="setting-label">今日推送次数</span>
+        <span class="setting-value" id="pushCount">-</span>
+      </div>
+      
+      <div class="setting-item" id="testPushBtn" style="cursor: pointer;">
+        <span class="setting-label">测试推送</span>
+        <span class="setting-value">点击发送</span>
       </div>
       
       <div class="smart-push-hint" style="margin-top: 16px;">
-        根据你的职业和工作时间智能推算。关闭后重新打开可重新计算。
+        推送时间根据你的职业和性格智能计算，每人不同。
       </div>
     </div>
     

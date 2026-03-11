@@ -1,161 +1,178 @@
-// 每天夸你一万遍 - 极简日式版 v3.1
-// 霞鹜文楷字体，智能推送时间
+// 每天夸你一万遍 - 智能分层推送系统 v4.0
+// 根据用户画像定制推送策略
 
-// ==================== 智能推送时间计算 ====================
-function calculatePushTime(career, workMode, workStart, workEnd) {
-  // 职业特殊处理
-  if (career === 'student') {
-    return '07:30'; // 学生：上学前
-  }
+// ==================== 推送策略配置 ====================
+const PUSH_STRATEGIES = {
+  // 朝九晚五上班族
+  nineToFive: {
+    name: '朝九晚五',
+    pushes: [
+      { time: '08:30', type: 'morning', content: 'energy' },
+      { time: '12:00', type: 'lunch', content: 'relax' },
+      { time: '18:30', type: 'evening', content: 'heal' }
+    ]
+  },
   
-  if (career === 'programmer') {
-    // 程序员：夜猫子，晚上10点
-    return '22:00';
-  }
+  // 程序员（夜猫子）
+  programmer: {
+    name: '程序员',
+    pushes: [
+      { time: '10:00', type: 'work', content: 'tech' },
+      { time: '15:00', type: 'break', content: 'relax' },
+      { time: '22:00', type: 'night', content: 'nightOwl' }
+    ]
+  },
   
-  if (career === 'medical') {
-    // 医护人员：根据轮班，默认早晚交接时
-    if (workMode === 'shift') {
-      // 如果设置了上班时间，在上班前1小时或下班后
-      if (workStart) {
-        const hour = parseInt(workStart.split(':')[0]);
-        if (hour < 12) {
-          // 早班：上班前1小时
-          return String(hour - 1).padStart(2, '0') + ':00';
-        } else {
-          // 晚班：下午4点鼓励
-          return '16:00';
-        }
-      }
-    }
-    return '08:00';
-  }
+  // 学生
+  student: {
+    name: '学生',
+    pushes: [
+      { time: '07:30', type: 'morning', content: 'encourage' },
+      { time: '12:00', type: 'lunch', content: 'rest' },
+      { time: '21:00', type: 'night', content: 'summary' }
+    ]
+  },
   
-  // 根据工作模式
-  switch (workMode) {
-    case 'nineToFive':
-      // 朝九晚五：早上8:30 或 晚上下班后
-      if (workEnd) {
-        const endHour = parseInt(workEnd.split(':')[0]);
-        // 下班后半小时
-        return String(endHour + 1).padStart(2, '0') + ':30';
-      }
-      return '08:30';
-      
-    case 'flexible':
-      return '09:30'; // 弹性工作：上午9:30
-      
-    case 'shift':
-      if (workStart) {
-        const hour = parseInt(workStart.split(':')[0]);
-        if (hour < 10) {
-          // 早班：上班前
-          return String(hour - 1).padStart(2, '0') + ':30';
-        } else if (hour < 14) {
-          // 中班：上午鼓励
-          return '10:00';
-        } else {
-          // 晚班：下午鼓励
-          return '15:00';
-        }
-      }
-      return '09:00';
-      
-    case 'freelance':
-      return '09:00'; // 自由职业：早上9点
-      
-    case 'unemployed':
-      return '09:30'; // 待业：上午9:30，开启新的一天
-      
-    default:
-      return '09:00';
+  // 自由职业
+  freelance: {
+    name: '自由职业',
+    pushes: [
+      { time: '10:00', type: 'morning', content: 'inspire', random: true },
+      { time: '15:00', type: 'afternoon', content: 'continue', random: true }
+    ]
+  },
+  
+  // 轮班制（医护等）
+  shift: {
+    name: '轮班工作',
+    pushes: [
+      { time: 'beforeWork', offset: -60, type: 'before', content: 'cheer' },
+      { time: 'midWork', offset: 240, type: 'mid', content: 'persist' },
+      { time: 'afterWork', offset: 30, type: 'after', content: 'rest' }
+    ],
+    dynamic: true // 动态计算
+  },
+  
+  // 待业/求职
+  unemployed: {
+    name: '求职中',
+    pushes: [
+      { time: '09:00', type: 'morning', content: 'encourage' },
+      { time: '14:00', type: 'afternoon', content: 'inspire' },
+      { time: '20:00', type: 'evening', content: 'comfort' }
+    ]
   }
-}
+};
 
-// 获取职业中文名
-function getCareerName(career) {
-  const names = {
-    programmer: '程序员',
-    designer: '设计师',
-    product: '产品经理',
-    teacher: '教师',
-    medical: '医护',
-    sales: '销售',
-    student: '学生',
-    freelancer: '自由职业',
-    other: '职场人'
-  };
-  return names[career] || '朋友';
-}
+// ==================== 性格加成策略 ====================
+const PERSONALITY_MODIFIERS = {
+  '容易焦虑': {
+    extraPushes: [
+      { type: 'random', chance: 0.3, content: 'calm' } // 30%概率额外推送安抚
+    ],
+    contentBias: 'calm'
+  },
+  '完美主义': {
+    extraPushes: [
+      { type: 'evening', time: '23:00', content: 'acceptance' }
+    ],
+    contentBias: 'acceptance'
+  },
+  '拖延症': {
+    extraPushes: [
+      { type: 'afternoon', time: '14:00', content: 'start' }
+    ],
+    contentBias: 'action'
+  },
+  '高敏感': {
+    extraPushes: [
+      { type: 'random', chance: 0.2, content: 'gentle' }
+    ],
+    contentBias: 'gentle'
+  },
+  '卷王': {
+    extraPushes: [
+      { type: 'evening', time: '21:00', content: 'restReminder' }
+    ],
+    contentBias: 'rest'
+  },
+  '佛系': {
+    pushReduction: true, // 减少推送次数
+    contentBias: 'zen'
+  }
+};
 
-// 获取推送时间描述
-function getPushTimeDescription(career, workMode) {
-  if (career === 'programmer') return '晚间';
-  if (career === 'student') return '清晨';
-  if (workMode === 'nineToFive') return '下班后';
-  if (workMode === 'shift') return '根据班次';
-  if (workMode === 'freelance') return '上午';
-  return '上午';
-}
-
-// ==================== 夸夸库（中文日式治愈文案）====================
-const PRAISE_LIBRARY = {
-  // 基础夸夸 - 侘寂美学
-  base: [
-    "今日也辛苦了。",
-    "按你的节奏来，没关系。",
-    "慢慢来，你在前进就好。",
-    "现在的你，已经足够好了。",
-    "不必勉强，善待自己。",
-    "细微之处，也有值得感恩的事。",
-    "今天是不会重来的珍贵一天。",
-    "深呼吸，放轻松。",
-    "你的努力，终会开花结果。",
-    "不必完美，你也值得被爱。",
-    "一步一步，稳稳地走。",
-    "今天的你，比昨天更闪耀。",
-    "累了就休息，没关系的。",
-    "你的存在本身，就是无可替代的价值。",
-    "慢慢来，相信自己。",
-    "世事无常，安心即是归处。",
-    "平淡的日子里，也有光。",
-    "你已经做得很好了。",
-    "给自己一个拥抱吧。",
-    "今天的阳光，是为你而洒。"
+// ==================== 内容库（按类型分类）====================
+const CONTENT_LIBRARY = {
+  energy: [
+    "新的一天，带着能量出发。",
+    "今日的你，也会闪闪发光。",
+    "开工了，慢慢来就好。"
   ],
-  
-  // 场景化
-  morning: [
-    "早安。愿你今日安稳。",
-    "清晨的宁静，请收入心底。",
-    "新的一天，新的可能。"
+  relax: [
+    "午休时间，好好吃饭。",
+    "停下来，休息也是工作的一部分。",
+    "此刻的宁静，请收入心底。"
   ],
-  work: [
-    "专注的你，很美丽。",
-    "一件一件，慢慢来。",
-    "记得适时休息。"
+  heal: [
+    "一日的辛劳，值得被温柔以待。",
+    "下班了，今天也辛苦了。",
+    "归途的风景，是给你我的礼物。"
   ],
-  lunch: [
-    "好好吃饭，是今日的修行。",
-    "午后的片刻安宁。"
+  tech: [
+    "代码的世界，由你构建。",
+    "Bug总会解决，就像困难总会过去。",
+    "你的逻辑，清晰如晨光。"
   ],
-  evening: [
-    "一日的终了，请慰劳自己。",
-    "如黄昏般温柔地，对待自己。"
+  nightOwl: [
+    "深夜的屏幕，映着你的专注。",
+    "夜色温柔，不必太晚。",
+    "星光不负赶路人。"
   ],
-  night: [
-    "夜晚是休息的时间，请安心入睡。",
-    "好梦。",
-    "今天的你已经很努力了。"
+  encourage: [
+    "每一步都在前进，哪怕很小。",
+    "相信自己的选择。",
+    "今天的努力，明天的你会感谢。"
   ],
-  weekend: [
-    "慢慢度过的时光，也是珍贵的时光。",
-    "周末是属于自己的日子。"
+  calm: [
+    "深呼吸，一切都好。",
+    "不必着急，按你的节奏来。",
+    "此刻的你，已经够好了。"
+  ],
+  inspire: [
+    "灵感可能在下一刻到来。",
+    "保持好奇，世界很大。",
+    "你的独特，是世界的礼物。"
+  ],
+  gentle: [
+    "轻轻地，善待自己。",
+    "敏感是天赋，不是你的错。",
+    "世界喧嚣，你可以安静。"
+  ],
+  zen: [
+    "无事小神仙。",
+    "随遇而安。",
+    "云淡风轻。"
+  ],
+  cheer: [
+    "新的一天，加油。",
+    "你的付出，有人看见。",
+    "辛苦了，再坚持一下。"
+  ],
+  persist: [
+    " halfway there，继续。",
+    "累的时候，想想为什么开始。",
+    "你的坚守，有意义。"
+  ],
+  rest: [
+    "终于可以休息了。",
+    "卸下疲惫，好梦。",
+    "你值得好好睡一觉。"
   ]
 };
 
 // ==================== IndexedDB ====================
-const DB_NAME = 'PraiseDB_muji_v2';
+const DB_NAME = 'PraiseDB_v4';
 const DB_VERSION = 1;
 
 const db = {
@@ -171,6 +188,9 @@ const db = {
         }
         if (!db.objectStoreNames.contains('profile')) {
           db.createObjectStore('profile', { keyPath: 'key' });
+        }
+        if (!db.objectStoreNames.contains('pushLog')) {
+          db.createObjectStore('pushLog', { keyPath: 'id', autoIncrement: true });
         }
       };
     });
@@ -196,43 +216,114 @@ const db = {
       request.onsuccess = () => resolve(request.result?.value);
       request.onerror = () => reject(request.error);
     });
-  },
-
-  async savePraise(date, content) {
-    const database = await this.init();
-    return new Promise((resolve, reject) => {
-      const tx = database.transaction(['praises'], 'readwrite');
-      const store = tx.objectStore('praises');
-      store.put({ date, content, timestamp: Date.now() });
-      tx.oncomplete = resolve;
-      tx.onerror = () => reject(tx.error);
-    });
-  },
-
-  async getPraise(date) {
-    const database = await this.init();
-    return new Promise((resolve, reject) => {
-      const tx = database.transaction(['praises'], 'readonly');
-      const store = tx.objectStore('praises');
-      const request = store.get(date);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
   }
 };
 
+// ==================== 推送计划生成器 ====================
+function generatePushSchedule(profile) {
+  const schedule = [];
+  const workMode = profile.workMode || 'nineToFive';
+  const strategy = PUSH_STRATEGIES[workMode] || PUSH_STRATEGIES.nineToFive;
+  
+  // 基础推送
+  strategy.pushes.forEach(push => {
+    let time = push.time;
+    
+    // 动态计算时间（轮班制）
+    if (strategy.dynamic && push.time === 'beforeWork') {
+      const [hour, minute] = (profile.workStart || '09:00').split(':').map(Number);
+      const date = new Date();
+      date.setHours(hour, minute + push.offset, 0, 0);
+      time = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    } else if (strategy.dynamic && push.time === 'midWork') {
+      const [hour, minute] = (profile.workStart || '09:00').split(':').map(Number);
+      const date = new Date();
+      date.setHours(hour, minute, 0, 0);
+      date.setMinutes(date.getMinutes() + push.offset);
+      time = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    } else if (strategy.dynamic && push.time === 'afterWork') {
+      const [hour, minute] = (profile.workEnd || '18:00').split(':').map(Number);
+      const date = new Date();
+      date.setHours(hour, minute + push.offset, 0, 0);
+      time = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    }
+    
+    schedule.push({
+      time,
+      type: push.type,
+      content: push.content,
+      random: push.random || false
+    });
+  });
+  
+  // 性格加成
+  const personality = profile.personality || [];
+  personality.forEach(p => {
+    const modifier = PERSONALITY_MODIFIERS[p];
+    if (modifier && modifier.extraPushes) {
+      modifier.extraPushes.forEach(extra => {
+        if (extra.chance && Math.random() > extra.chance) return;
+        
+        schedule.push({
+          time: extra.time || 'random',
+          type: extra.type,
+          content: extra.content,
+          isExtra: true
+        });
+      });
+    }
+    
+    // 佛系减少推送
+    if (modifier && modifier.pushReduction) {
+      return schedule.slice(0, 1); // 只保留第一个
+    }
+  });
+  
+  return schedule;
+}
+
 // ==================== 状态管理 ====================
-let currentStep = 1;
-const totalSteps = 4;
-let profile = {
-  nickname: '',
-  age: '',
-  career: '',
-  workMode: '',
-  workStart: '09:00',
-  workEnd: '18:00',
-  pushTime: '',
-  pushEnabled: true
+let profile = {};
+let pushSchedule = [];
+
+// ==================== 推送管理器 ====================
+const PushManager = {
+  timers: [],
+  
+  async init() {
+    if (!('serviceWorker' in navigator)) return false;
+    if (!('Notification' in window)) return false;
+    
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  },
+  
+  async start(schedule) {
+    this.stop();
+    pushSchedule = schedule;
+    
+    // 向Service Worker发送推送计划
+    const reg = await navigator.serviceWorker.ready;
+    reg.active.postMessage({
+      type: 'SET_SCHEDULE',
+      schedule: schedule
+    });
+    
+    console.log('[Push] 推送计划已设置:', schedule);
+  },
+  
+  stop() {
+    this.timers.forEach(t => clearTimeout(t));
+    this.timers = [];
+  },
+  
+  async test(type = 'random') {
+    const reg = await navigator.serviceWorker.ready;
+    reg.active.postMessage({ 
+      type: 'TEST_PUSH',
+      contentType: type
+    });
+  }
 };
 
 // ==================== 初始化 ====================
@@ -259,26 +350,22 @@ function showScreen(screenId) {
   document.getElementById(screenId).classList.add('active');
 }
 
-function showStep(stepNum) {
-  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-  document.getElementById(`step${stepNum}`).classList.add('active');
-  
-  document.querySelectorAll('.dot').forEach((dot, idx) => {
-    dot.classList.toggle('active', idx === stepNum - 1);
-  });
-  
-  currentStep = stepNum;
-}
-
 // ==================== 引导页逻辑 ====================
 function initOnboarding() {
+  const totalSteps = 4;
+  let currentStep = 1;
+  
+  function showStep(step) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(`step${step}`).classList.add('active');
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === step - 1));
+    currentStep = step;
+  }
+  
   // 步骤1：昵称
   document.getElementById('nextStep1').addEventListener('click', () => {
     const nickname = document.getElementById('inputNickname').value.trim();
-    if (!nickname) {
-      alert('请输入你的名字');
-      return;
-    }
+    if (!nickname) return alert('请输入名字');
     profile.nickname = nickname;
     showStep(2);
   });
@@ -294,10 +381,7 @@ function initOnboarding() {
   
   document.getElementById('prevStep2').addEventListener('click', () => showStep(1));
   document.getElementById('nextStep2').addEventListener('click', () => {
-    if (!profile.age) {
-      alert('请选择年龄段');
-      return;
-    }
+    if (!profile.age) return alert('请选择年龄段');
     showStep(3);
   });
   
@@ -312,183 +396,124 @@ function initOnboarding() {
   
   document.getElementById('prevStep3').addEventListener('click', () => showStep(2));
   document.getElementById('nextStep3').addEventListener('click', () => {
-    if (!profile.career) {
-      alert('请选择职业');
-      return;
-    }
+    if (!profile.career) return alert('请选择职业');
     showStep(4);
   });
   
-  // 步骤4：工作模式（最后一步）
+  // 步骤4：工作模式
   document.querySelectorAll('#workModeOptions .option-item').forEach(item => {
     item.addEventListener('click', () => {
       document.querySelectorAll('#workModeOptions .option-item').forEach(i => i.classList.remove('selected'));
       item.classList.add('selected');
       profile.workMode = item.dataset.value;
       
-      // 显示/隐藏时间选择
       const timeSection = document.getElementById('workTimeSection');
-      if (profile.workMode === 'nineToFive' || profile.workMode === 'shift') {
-        timeSection.style.display = 'block';
-      } else {
-        timeSection.style.display = 'none';
-      }
+      timeSection.style.display = (profile.workMode === 'nineToFive' || profile.workMode === 'shift') ? 'block' : 'none';
       
-      // 更新智能推送提示
-      updateSmartHint();
+      updatePushPreview();
     });
   });
   
+  // 性格标签
+  document.querySelectorAll('#personalityOptions .tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      tag.classList.toggle('selected');
+      profile.personality = Array.from(document.querySelectorAll('#personalityOptions .tag.selected'))
+        .map(t => t.dataset.value);
+      updatePushPreview();
+    });
+  });
+  
+  function updatePushPreview() {
+    if (!profile.workMode) return;
+    
+    const preview = document.getElementById('pushPreview');
+    const schedule = generatePushSchedule(profile);
+    
+    let html = '<strong>预计今日推送：</strong><br>';
+    schedule.forEach((s, i) => {
+      html += `${i + 1}. ${s.time} - ${getContentTypeName(s.content)}<br>`;
+    });
+    
+    preview.innerHTML = html;
+    preview.style.display = 'block';
+  }
+  
   document.getElementById('prevStep4').addEventListener('click', () => showStep(3));
   document.getElementById('finishOnboarding').addEventListener('click', async () => {
-    if (!profile.workMode) {
-      alert('请选择工作模式');
-      return;
-    }
+    if (!profile.workMode) return alert('请选择工作模式');
     
     if (profile.workMode === 'nineToFive' || profile.workMode === 'shift') {
       profile.workStart = document.getElementById('workStart').value;
       profile.workEnd = document.getElementById('workEnd').value;
     }
     
-    // 计算智能推送时间
-    profile.pushTime = calculatePushTime(profile.career, profile.workMode, profile.workStart, profile.workEnd);
-    
+    profile.pushEnabled = true;
     await db.save('userProfile', profile);
+    await PushManager.init();
     
-    // 请求通知权限
-    if ('Notification' in window) {
-      await Notification.requestPermission();
-    }
+    // 生成并启动推送计划
+    const schedule = generatePushSchedule(profile);
+    await PushManager.start(schedule);
     
     showScreen('mainScreen');
     initMainScreen();
   });
 }
 
-function updateSmartHint() {
-  const hint = document.getElementById('smartPushHint');
-  if (!profile.career || !profile.workMode) {
-    hint.textContent = '根据你的职业和时间，我们会在最合适的时刻送上夸夸。';
-    return;
-  }
-  
-  const desc = getPushTimeDescription(profile.career, profile.workMode);
-  hint.innerHTML = `根据你的职业和工作模式，推送时间已智能设置为：<strong>${desc}</strong>。`;
+function getContentTypeName(type) {
+  const names = {
+    energy: '能量', relax: '放松', heal: '治愈',
+    tech: '技术', nightOwl: '深夜', encourage: '鼓励',
+    calm: '安抚', inspire: '灵感', gentle: '温柔',
+    zen: '佛系', cheer: '加油', persist: '坚持', rest: '休息'
+  };
+  return names[type] || type;
 }
 
 // ==================== 主界面逻辑 ====================
 async function initMainScreen() {
-  const nickname = profile.nickname || '朋友';
-  document.getElementById('displayNickname').textContent = nickname;
+  document.getElementById('displayNickname').textContent = profile.nickname || '朋友';
   
-  // 初始化推送
-  await PushManager.init();
-  if (profile.pushEnabled !== false && profile.pushTime) {
-    await PushManager.start(profile.pushTime);
+  // 重新计算今日推送计划
+  const schedule = generatePushSchedule(profile);
+  
+  // 显示今日推送预览
+  const todayPushes = document.getElementById('todayPushes');
+  if (todayPushes) {
+    let html = '';
+    schedule.forEach((s, i) => {
+      const now = new Date();
+      const [h, m] = s.time.split(':').map(Number);
+      const pushTime = new Date();
+      pushTime.setHours(h, m, 0, 0);
+      const passed = now > pushTime;
+      
+      html += `<div style="padding: 8px 0; ${passed ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
+        ${passed ? '✓' : '○'} ${s.time} ${getContentTypeName(s.content)}
+      </div>`;
+    });
+    todayPushes.innerHTML = html;
   }
   
-  // 检查今天是否已有夸夸
-  const today = new Date().toISOString().split('T')[0];
-  const saved = await db.getPraise(today);
+  // 获取一条随机夸夸
+  const praise = getRandomPraise();
+  document.getElementById('praiseText').textContent = praise;
   
-  if (saved) {
-    displayPraise(saved.content);
-  } else {
-    generateNewPraise();
-  }
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    document.getElementById('praiseText').textContent = getRandomPraise();
+  });
   
-  document.getElementById('generateBtn').addEventListener('click', generateNewPraise);
   document.getElementById('settingsBtn').addEventListener('click', () => {
     showScreen('settingsScreen');
     loadSettings();
   });
 }
 
-async function generateNewPraise() {
-  const btn = document.getElementById('generateBtn');
-  btn.textContent = '...';
-  btn.disabled = true;
-  
-  // 根据时间选择场景
-  const hour = new Date().getHours();
-  let scene = 'base';
-  
-  if (hour >= 5 && hour < 9) scene = 'morning';
-  else if (hour >= 9 && hour < 12) scene = 'work';
-  else if (hour >= 12 && hour < 14) scene = 'lunch';
-  else if (hour >= 14 && hour < 18) scene = 'work';
-  else if (hour >= 18 && hour < 22) scene = 'evening';
-  else scene = 'night';
-  
-  const day = new Date().getDay();
-  if (day === 0 || day === 6) {
-    scene = 'weekend';
-  }
-  
-  const pool = [...PRAISE_LIBRARY.base, ...(PRAISE_LIBRARY[scene] || [])];
-  const praise = pool[Math.floor(Math.random() * pool.length)];
-  
-  const today = new Date().toISOString().split('T')[0];
-  await db.savePraise(today, praise);
-  
-  displayPraise(praise);
-  
-  btn.textContent = '再读一句';
-  btn.disabled = false;
+function getRandomPraise() {
+  const allPraises = Object.values(CONTENT_LIBRARY).flat();
+  return allPraises[Math.floor(Math.random() * allPraises.length)];
 }
-
-function displayPraise(text) {
-  const container = document.getElementById('praiseText');
-  container.textContent = text;
-  
-  const dateStr = new Date().toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long'
-  });
-  document.getElementById('praiseDate').textContent = dateStr;
-}
-
-// ==================== 推送管理 ====================
-const PushManager = {
-  async init() {
-    if (!('serviceWorker' in navigator)) {
-      console.log('不支持Service Worker');
-      return false;
-    }
-    
-    const reg = await navigator.serviceWorker.ready;
-    
-    // 请求通知权限
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
-    }
-    return false;
-  },
-  
-  async start(time) {
-    const reg = await navigator.serviceWorker.ready;
-    reg.active.postMessage({
-      type: 'START_PUSH',
-      time: time
-    });
-    console.log('[Push] 已启动定时推送:', time);
-  },
-  
-  async stop() {
-    const reg = await navigator.serviceWorker.ready;
-    reg.active.postMessage({ type: 'STOP_PUSH' });
-    console.log('[Push] 已停止推送');
-  },
-  
-  async test() {
-    const reg = await navigator.serviceWorker.ready;
-    reg.active.postMessage({ type: 'TEST_PUSH' });
-  }
-};
 
 // ==================== 设置页逻辑 ====================
 function initSettings() {
@@ -502,17 +527,16 @@ function initSettings() {
     const isActive = toggle.classList.contains('active');
     
     if (isActive) {
-      // 开启推送
-      await PushManager.start(profile.pushTime);
+      const schedule = generatePushSchedule(profile);
+      await PushManager.start(schedule);
     } else {
-      // 关闭推送
       await PushManager.stop();
     }
   });
   
-  // 测试推送按钮（点击推送时间显示区域）
-  document.getElementById('pushTimeDisplay').parentElement.addEventListener('click', () => {
-    PushManager.test();
+  // 测试推送
+  document.getElementById('testPushBtn').addEventListener('click', () => {
+    PushManager.test('random');
   });
   
   document.getElementById('resetProfile').addEventListener('click', async () => {
@@ -526,13 +550,6 @@ function initSettings() {
   document.getElementById('saveSettings').addEventListener('click', async () => {
     profile.pushEnabled = document.getElementById('pushToggle').classList.contains('active');
     await db.save('userProfile', profile);
-    
-    if (profile.pushEnabled) {
-      await PushManager.start(profile.pushTime);
-    } else {
-      await PushManager.stop();
-    }
-    
     alert('已保存');
     showScreen('mainScreen');
   });
@@ -540,12 +557,9 @@ function initSettings() {
 
 async function loadSettings() {
   const toggle = document.getElementById('pushToggle');
-  if (profile.pushEnabled !== false) {
-    toggle.classList.add('active');
-  } else {
-    toggle.classList.remove('active');
-  }
+  toggle.classList.toggle('active', profile.pushEnabled !== false);
   
-  // 显示具体推送时间
-  document.getElementById('pushTimeDisplay').textContent = profile.pushTime || '09:00';
+  // 显示推送统计
+  const schedule = generatePushSchedule(profile);
+  document.getElementById('pushCount').textContent = `今日${schedule.length}次`;
 }
