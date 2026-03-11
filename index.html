@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FF69B4">
+  <title>每天夸你一万遍</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: white;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      text-align: center;
+      padding: 30px 0;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+    .card {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 30px;
+      margin: 20px 0;
+      border: 1px solid rgba(255,255,255,0.2);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '"';
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      font-size: 80px;
+      opacity: 0.1;
+      font-family: Georgia, serif;
+    }
+    .praise-text {
+      font-size: 1.3rem;
+      line-height: 1.8;
+      text-align: center;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .praise-date {
+      text-align: center;
+      opacity: 0.7;
+      font-size: 0.85rem;
+      margin-top: 20px;
+    }
+    .btn {
+      background: white;
+      color: #764ba2;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      width: 100%;
+      margin: 8px 0;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    .btn-outline {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+    }
+    .btn-outline:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .settings-panel {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      margin: 15px 0;
+      display: none;
+    }
+    .settings-panel.active {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .setting-item {
+      margin: 15px 0;
+    }
+    .setting-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    .setting-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    .setting-input option {
+      color: #333;
+    }
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .tag {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.3);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tag.active {
+      background: white;
+      color: #764ba2;
+    }
+    .install-hint {
+      background: rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 16px;
+      margin: 15px 0;
+      text-align: center;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .install-hint.active {
+      display: block;
+    }
+    .status-bar {
+      text-align: center;
+      padding: 10px;
+      font-size: 0.85rem;
+      opacity: 0.8;
+      min-height: 40px;
+    }
+    .hearts {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: -1;
+    }
+    .heart {
+      position: absolute;
+      font-size: 20px;
+      animation: float 10s infinite ease-in-out;
+      opacity: 0.3;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(100vh) rotate(0deg); }
+      100% { transform: translateY(-100px) rotate(360deg); }
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts" id="hearts"></div>
+  
+  <div class="container">
+    <header>
+      <h1>💫 每天夸你一万遍</h1>
+      <p class="subtitle">让温暖不期而遇</p>
+    </header>
+    
+    <div class="card">
+      <div class="praise-text" id="praiseText">
+        <span style="opacity: 0.7">点击下方按钮，接收今日份温暖...</span>
+      </div>
+      <div class="praise-date" id="praiseDate"></div>
+    </div>
+    
+    <div class="status-bar" id="statusBar"></div>
+    
+    <button class="btn" id="generateBtn">
+      ✨ 立即夸夸
+    </button>
+    
+    <button class="btn btn-outline" id="settingsBtn">
+      ⚙️ 推送设置
+    </button>
+    
+    <div class="settings-panel" id="settingsPanel">
+      <div class="setting-item">
+        <label class="setting-label">怎么称呼你</label>
+        <input type="text" class="setting-input" id="nickname" placeholder="输入你的名字或昵称">
+      </div>
+      
+      <div class="setting-item">
+        <label class="setting-label">喜欢的风格（可多选）</label>
+        <div class="tag-container">
+          <span class="tag active" data-style="gentle">温柔治愈</span>
+          <span class="tag" data-style="energetic">热血鼓励</span>
+          <span class="tag" data-style="humor">幽默调侃</span>
+          <span class="tag" data-style="poetic">文艺清新</span>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <label class="setting-label">推送时间</label>
+        <select class="setting-input" id="pushTime">
+          <option value="08:00">早上 8:00</option>
+          <option value="09:00" selected>早上 9:00</option>
+          <option value="12:00">中午 12:00</option>
+          <option value="18:00">晚上 18:00</option>
+          <option value="21:00">晚上 21:00</option>
+          <option value="22:00">晚上 22:00</option>
+        </select>
+      </div>
+      
+      <button class="btn" id="saveSettingsBtn">💾 保存并开启推送</button>
+    </div>
+    
+    <div class="install-hint" id="installHint">
+      <strong>📱 添加到主屏幕使用更佳</strong><br>
+      <small id="installText">点击浏览器菜单 → 添加到主屏幕</small>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
