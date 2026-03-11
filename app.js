@@ -382,6 +382,12 @@ async function initMainScreen() {
   const nickname = profile.nickname || '朋友';
   document.getElementById('displayNickname').textContent = nickname;
   
+  // 初始化推送
+  await PushManager.init();
+  if (profile.pushEnabled !== false && profile.pushTime) {
+    await PushManager.start(profile.pushTime);
+  }
+  
   // 检查今天是否已有夸夸
   const today = new Date().toISOString().split('T')[0];
   const saved = await db.getPraise(today);
@@ -445,6 +451,45 @@ function displayPraise(text) {
   document.getElementById('praiseDate').textContent = dateStr;
 }
 
+// ==================== 推送管理 ====================
+const PushManager = {
+  async init() {
+    if (!('serviceWorker' in navigator)) {
+      console.log('不支持Service Worker');
+      return false;
+    }
+    
+    const reg = await navigator.serviceWorker.ready;
+    
+    // 请求通知权限
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      return permission === 'granted';
+    }
+    return false;
+  },
+  
+  async start(time) {
+    const reg = await navigator.serviceWorker.ready;
+    reg.active.postMessage({
+      type: 'START_PUSH',
+      time: time
+    });
+    console.log('[Push] 已启动定时推送:', time);
+  },
+  
+  async stop() {
+    const reg = await navigator.serviceWorker.ready;
+    reg.active.postMessage({ type: 'STOP_PUSH' });
+    console.log('[Push] 已停止推送');
+  },
+  
+  async test() {
+    const reg = await navigator.serviceWorker.ready;
+    reg.active.postMessage({ type: 'TEST_PUSH' });
+  }
+};
+
 // ==================== 设置页逻辑 ====================
 function initSettings() {
   document.getElementById('closeSettings').addEventListener('click', () => {
@@ -452,12 +497,27 @@ function initSettings() {
   });
   
   const toggle = document.getElementById('pushToggle');
-  toggle.addEventListener('click', () => {
+  toggle.addEventListener('click', async () => {
     toggle.classList.toggle('active');
+    const isActive = toggle.classList.contains('active');
+    
+    if (isActive) {
+      // 开启推送
+      await PushManager.start(profile.pushTime);
+    } else {
+      // 关闭推送
+      await PushManager.stop();
+    }
+  });
+  
+  // 测试推送按钮（点击推送时间显示区域）
+  document.getElementById('pushTimeDisplay').parentElement.addEventListener('click', () => {
+    PushManager.test();
   });
   
   document.getElementById('resetProfile').addEventListener('click', async () => {
     if (confirm('确定要重新设置吗？')) {
+      await PushManager.stop();
       await db.save('userProfile', null);
       location.reload();
     }
@@ -466,6 +526,13 @@ function initSettings() {
   document.getElementById('saveSettings').addEventListener('click', async () => {
     profile.pushEnabled = document.getElementById('pushToggle').classList.contains('active');
     await db.save('userProfile', profile);
+    
+    if (profile.pushEnabled) {
+      await PushManager.start(profile.pushTime);
+    } else {
+      await PushManager.stop();
+    }
+    
     alert('已保存');
     showScreen('mainScreen');
   });
@@ -479,7 +546,6 @@ async function loadSettings() {
     toggle.classList.remove('active');
   }
   
-  // 显示智能推送时间描述
-  const desc = getPushTimeDescription(profile.career, profile.workMode);
-  document.getElementById('pushTimeDisplay').textContent = desc;
+  // 显示具体推送时间
+  document.getElementById('pushTimeDisplay').textContent = profile.pushTime || '09:00';
 }
